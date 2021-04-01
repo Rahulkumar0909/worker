@@ -13,17 +13,17 @@
        - https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg  https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
 
 - name: Installing softwares
-  yum: 
+  yum:
      name: "{{ item }}"
-     state: present  
+     state: present
   loop: "{{ packages }}"
 
 - name: Starting Services
-  service: 
+  service:
      name: "{{ item }}"
      state: started
      enabled: yes
-  loop: "{{ services }}"   
+  loop: "{{ services }}"
 
 - name: Docker daemon.json file
   copy:
@@ -34,22 +34,22 @@
   service:
     name: docker
     state: restarted
-    enabled: yes 
+    enabled: yes
 
 - name: Creating conf directory
   file:
       path: /etc/systl.d/
-      state: directory     
+      state: directory
 
 - name: Worker K8S conf file configuration
-  copy: 
+  copy:
       dest: /etc/systl.d/k8s.conf
       content: "{{ k8s_conf }}"
 
 - name: Creating fact directory
   file:
       path: /etc/ansible/facts.d/
-      state: directory    
+      state: directory
 
 - name: Copy fact file from local to worker
   copy:
@@ -59,12 +59,14 @@
 
 - name: nf call iptables.
   shell: echo "1" > /proc/sys/net/bridge/bridge-nf-call-iptables
+  changed_when: False
 
 #For updating the uploaded fact information.
 - name: Re-gathering the updated facts.
   setup:
   register: updated_fcts
- 
+
 - name: Joining all worker nodes to Master node
-  shell: "{{ ansible_local['master_token']['worker_token_cmd']['token_cmd'] }}"
-  ignore_errors: True  
+  command: "{{ ansible_local['master_token']['worker_token_cmd']['token_cmd'] }}"
+  changed_when: False
+  ignore_errors: True
